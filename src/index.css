@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Alwajud Ventures - Factory Management Design System
+   Industrial, professional aesthetic with high contrast for easy visibility
+*/
+
+
+@layer base {
+  :root {
+    /* Deep blue primary - industrial, trustworthy */
+    --primary: 224 76% 33%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Gold accent - premium, attention-grabbing */
+    --accent: 38 92% 50%;
+    --accent-foreground: 224 76% 15%;
+    
+    /* Clean backgrounds */
+    --background: 0 0% 100%;
+    --foreground: 224 40% 10%;
+    
+    /* Cards with subtle warmth */
+    --card: 0 0% 100%;
+    --card-foreground: 224 40% 10%;
+    
+    /* Muted surfaces */
+    --muted: 220 20% 96%;
+    --muted-foreground: 224 20% 40%;
+    
+    /* Secondary - lighter blue */
+    --secondary: 220 30% 94%;
+    --secondary-foreground: 224 76% 33%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 40% 10%;
+    
+    /* Borders */
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 224 76% 33%;
+    
+    /* Status colors */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 35%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 224 76% 15%;
+    
+    /* Chart colors */
+    --chart-1: 224 76% 33%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 142 71% 35%;
+    --chart-4: 280 65% 55%;
+    --chart-5: 340 75% 55%;
+    
+    /* Sidebar - darker blue */
+    --sidebar-background: 224 76% 20%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 224 76% 15%;
+    --sidebar-accent: 224 60% 28%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 224 50% 30%;
+    --sidebar-ring: 38 92% 50%;
+    
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --primary: 224 76% 60%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 38 92% 55%;
+    --accent-foreground: 0 0% 10%;
+    --background: 224 40% 8%;
+    --foreground: 0 0% 95%;
+    --card: 224 40% 12%;
+    --card-foreground: 0 0% 95%;
+    --muted: 224 30% 18%;
+    --muted-foreground: 220 20% 65%;
+    --secondary: 224 30% 18%;
+    --secondary-foreground: 0 0% 95%;
+    --popover: 224 40% 12%;
+    --popover-foreground: 0 0% 95%;
+    --border: 224 30% 22%;
+    --input: 224 30% 22%;
+    --ring: 38 92% 55%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --sidebar-background: 224 50% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 38 92% 55%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 224 40% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 224 40% 18%;
+    --sidebar-ring: 38 92% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', system-ui, sans-serif;
+    @apply font-bold tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+}
+
+@layer components {
+  /* Large clickable cards */
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl border-2 border-border bg-card p-6 shadow-sm transition-all duration-200;
+    @apply hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5;
+  }
+
+  .stat-card-accent {
+    @apply stat-card bg-primary text-primary-foreground border-primary;
+  }
+
+  .stat-card-gold {
+    @apply stat-card bg-accent text-accent-foreground border-accent;
+  }
+
+  /* Quick action buttons */
+  .action-button {
+    @apply flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-border bg-card p-6;
+    @apply text-foreground font-semibold transition-all duration-200;
+    @apply hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-lg;
+    @apply active:scale-[0.98] min-h-[120px];
+  }
+
+  /* Navigation items */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-lg px-4 py-3 text-sidebar-foreground/80;
+    @apply hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+    @apply transition-colors duration-150 font-medium;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-sidebar-primary text-sidebar-primary-foreground;
+    @apply hover:bg-sidebar-primary hover:text-sidebar-primary-foreground;
+  }
+
+  /* Form elements */
+  .form-label {
+    @apply block text-base font-semibold text-foreground mb-2;
+  }
+
+  .form-input {
+    @apply w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-lg;
+    @apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
+    @apply placeholder:text-muted-foreground/60 transition-colors;
+  }
+
+  /* Tables */
+  .data-table {
+    @apply w-full border-collapse;
+  }
+
+  .data-table th {
+    @apply bg-muted px-4 py-3 text-left font-semibold text-foreground text-base border-b-2 border-border;
+  }
+
+  .data-table td {
+    @apply px-4 py-4 text-base border-b border-border;
+  }
+
+  .data-table tr:hover td {
+    @apply bg-muted/50;
+  }
+
+  /* Status badges */
+  .status-open {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-sm font-semibold text-success;
+  }
+
+  .status-closed {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-semibold text-muted-foreground;
+  }
+
+  .status-pending {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-sm font-semibold text-warning;
+  }
+
+  /* Receipt styles for printing */
+  .receipt {
+    @apply font-mono text-sm bg-white text-black p-6 max-w-md mx-auto;
+  }
+
+  .receipt-header {
+    @apply text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4;
+  }
+
+  .receipt-row {
+    @apply flex justify-between py-1;
+  }
+
+  .receipt-divider {
+    @apply border-t border-dashed border-gray-400 my-3;
+  }
+
+  .receipt-total {
+    @apply text-lg font-bold border-t-2 border-black pt-2 mt-2;
+  }
+}
+
+@layer utilities {
+  /* Print utilities */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+
+    body {
+      background: white !important;
+      color: black !important;
+    }
+  }
+
+  .print-only {
+    display: none;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(224 76% 45%) 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(45 93% 47%) 100%);
+  }
+
+  .gradient-surface {
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg;
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

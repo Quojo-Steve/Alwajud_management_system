@@ -1,0 +1,2 @@
+On order creation, don't take weight. Instead calculate it based on the total weight of all printed rolls ✅
+If the amount of rolls in a previous cycle cannot reach, but it is used in addition to another cycle what happens

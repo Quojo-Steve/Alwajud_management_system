@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthContext } from "@/contexts/AuthContext";
 import { Lock, Factory, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useAuthContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,18 +17,17 @@ export default function Login() {
     setError('');
     setIsLoading(true);
 
-    // Simulate a brief loading state
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const success = login(password);
-    if (success) {
+    try {
+      await login(password);
       navigate('/dashboard');
-    } else {
-      setError('Invalid password. Please try again.');
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || 'Invalid password. Please try again.';
+      setError(message);
       setPassword('');
+    } finally {
+      setIsLoading(false); // runs whether success or error
     }
-    setIsLoading(false);
-  };
+};
 
   return (
     <div className="min-h-screen gradient-primary flex items-center justify-center p-4">

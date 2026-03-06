@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/contexts/AuthContext";
 import {
   Factory,
   LayoutDashboard,
@@ -35,7 +35,7 @@ const navItems = [
 export default function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout } = useAuthContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {

@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, User, MapPin, Phone, FileText } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, FileText, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { axiosService } from '@/utils/axiosServices';
 
 export default function NewClient() {
   const navigate = useNavigate();
-  const { addClient } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -19,28 +20,38 @@ export default function NewClient() {
     notes: '',
   });
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file)); // show preview
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const newClient = addClient({
-        name: formData.name,
-        location: formData.location,
-        phone: formData.phone || undefined,
-        notes: formData.notes || undefined,
-      });
+      const payload = new FormData();
+      payload.append('name', formData.name);
+      payload.append('location', formData.location);
+      if (formData.phone) payload.append('phone', formData.phone);
+      if (formData.notes) payload.append('description', formData.notes);
+      if (logoFile) payload.append('logo', logoFile);
+
+      const res = await axiosService('post', '/client', payload);
 
       toast({
         title: "Client Added",
         description: `${formData.name} has been added to your clients.`,
       });
 
-      navigate(`/clients/${newClient.id}`);
-    } catch (error) {
+      navigate('/clients');
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to add client. Please try again.",
+        description: error?.response?.data?.detail || "Failed to add client. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -56,25 +67,15 @@ export default function NewClient() {
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
-      {/* Header */}
       <div className="mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/clients')}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => navigate('/clients')} className="mb-4">
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Clients
         </Button>
-        <h1 className="text-3xl font-display font-bold text-foreground">
-          Add New Client
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Register a new customer to your database
-        </p>
+        <h1 className="text-3xl font-display font-bold text-foreground">Add New Client</h1>
+        <p className="text-muted-foreground mt-1">Register a new customer to your database</p>
       </div>
 
-      {/* Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -84,6 +85,30 @@ export default function NewClient() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* Logo Upload */}
+            <div>
+              <label className="form-label flex items-center gap-2">
+                <Image className="w-4 h-4" />
+                Logo (optional)
+              </label>
+              <div className="flex items-center gap-4">
+                {logoPreview && (
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="w-16 h-16 rounded-full object-cover border"
+                  />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="h-14 text-lg"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="form-label flex items-center gap-2">
                 <User className="w-4 h-4" />

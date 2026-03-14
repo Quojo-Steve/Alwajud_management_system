@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
+import { axiosService } from '@/utils/axiosServices';
 import { ArrowLeft, RefreshCcw, Package, DollarSign, Calendar, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,39 +9,40 @@ import { toast } from '@/hooks/use-toast';
 
 export default function NewCycle() {
   const navigate = useNavigate();
-  const { addCycle } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    startDate: new Date().toISOString().split('T')[0],
-    totalWeightKg: '',
-    costPerKg: '',
-    supplierName: '',
+    start_date: new Date().toISOString().split('T')[0],
+    total_weight_kg: '',
+    cost_per_kg: '',
+    supplier_id: '',
   });
+
+  useEffect(() => {
+    // Load suppliers for the dropdown
+    axiosService('get', '/suppliers')
+      .then(setSuppliers)
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      const newCycle = addCycle({
-        startDate: formData.startDate,
-        totalWeightKg: parseFloat(formData.totalWeightKg),
-        costPerKg: parseFloat(formData.costPerKg),
-        supplierName: formData.supplierName || undefined,
-        status: 'open',
+      const res = await axiosService('post', '/cycle', {
+        start_date: formData.start_date,
+        total_weight_kg: parseFloat(formData.total_weight_kg),
+        cost_per_kg: parseFloat(formData.cost_per_kg),
+        supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : null,
       });
 
-      toast({
-        title: "Cycle Created",
-        description: `Production cycle has been created successfully.`,
-      });
-
-      navigate(`/cycles/${newCycle.id}`);
-    } catch (error) {
+      toast({ title: "Cycle Created", description: "Production cycle created successfully." });
+      navigate(`/cycles/${res.cycle_id}`);
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to create cycle. Please try again.",
-        variant: "destructive",
+        description: err?.response?.data?.detail || "Failed to create cycle.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -52,49 +53,40 @@ export default function NewCycle() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const isValid = formData.startDate && 
-    parseFloat(formData.totalWeightKg) > 0 && 
-    parseFloat(formData.costPerKg) > 0;
+  const isValid = formData.start_date &&
+    parseFloat(formData.total_weight_kg) > 0 &&
+    parseFloat(formData.cost_per_kg) > 0;
+
+  const totalCost = formData.total_weight_kg && formData.cost_per_kg
+    ? parseFloat(formData.total_weight_kg) * parseFloat(formData.cost_per_kg)
+    : null;
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
-      {/* Header */}
       <div className="mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/cycles')}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Cycles
+        <Button variant="ghost" onClick={() => navigate('/cycles')} className="mb-4">
+          <ArrowLeft className="w-5 h-5 mr-2" /> Back to Cycles
         </Button>
-        <h1 className="text-3xl font-display font-bold text-foreground">
-          New Production Cycle
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Start a new batch to track incoming rubber weight
-        </p>
+        <h1 className="text-3xl font-display font-bold text-foreground">New Production Cycle</h1>
+        <p className="text-muted-foreground mt-1">Start a new batch to track incoming rubber weight</p>
       </div>
 
-      {/* Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <RefreshCcw className="w-5 h-5 text-primary" />
-            Cycle Details
+            <RefreshCcw className="w-5 h-5 text-primary" /> Cycle Details
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="form-label flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Date Opened
+                <Calendar className="w-4 h-4" /> Date Opened
               </label>
               <Input
                 type="date"
-                value={formData.startDate}
-                onChange={(e) => handleChange('startDate', e.target.value)}
+                value={formData.start_date}
+                onChange={(e) => handleChange('start_date', e.target.value)}
                 className="h-14 text-lg"
                 required
               />
@@ -102,35 +94,26 @@ export default function NewCycle() {
 
             <div>
               <label className="form-label flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Total Weight Received (kg)
+                <Package className="w-4 h-4" /> Total Weight Received (kg)
               </label>
               <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.totalWeightKg}
-                onChange={(e) => handleChange('totalWeightKg', e.target.value)}
+                type="number" step="0.01" min="0"
+                value={formData.total_weight_kg}
+                onChange={(e) => handleChange('total_weight_kg', e.target.value)}
                 placeholder="e.g., 500"
                 className="h-14 text-lg"
                 required
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                Enter the total weight of rubber received in this batch
-              </p>
             </div>
 
             <div>
               <label className="form-label flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Cost per kg (GH₵)
+                <DollarSign className="w-4 h-4" /> Cost per kg (GH₵)
               </label>
               <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.costPerKg}
-                onChange={(e) => handleChange('costPerKg', e.target.value)}
+                type="number" step="0.01" min="0"
+                value={formData.cost_per_kg}
+                onChange={(e) => handleChange('cost_per_kg', e.target.value)}
                 placeholder="e.g., 5.00"
                 className="h-14 text-lg"
                 required
@@ -139,45 +122,36 @@ export default function NewCycle() {
 
             <div>
               <label className="form-label flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Supplier Name (Optional)
+                <User className="w-4 h-4" /> Supplier (Optional)
               </label>
-              <Input
-                type="text"
-                value={formData.supplierName}
-                onChange={(e) => handleChange('supplierName', e.target.value)}
-                placeholder="e.g., ABC Suppliers"
-                className="h-14 text-lg"
-              />
+              <select
+                value={formData.supplier_id}
+                onChange={(e) => handleChange('supplier_id', e.target.value)}
+                className="w-full h-14 text-lg rounded-md border border-input bg-background px-3"
+              >
+                <option value="">-- No supplier --</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              <p className="text-sm text-muted-foreground mt-1">
+                <a href="/suppliers/new" className="text-primary underline">+ Add a new supplier</a> if not listed
+              </p>
             </div>
 
-            {/* Summary Preview */}
-            {formData.totalWeightKg && formData.costPerKg && (
+            {totalCost !== null && (
               <div className="p-4 rounded-lg bg-muted">
-                <h4 className="font-semibold mb-2">Cost Summary</h4>
-                <p className="text-2xl font-bold text-primary">
-                  GH₵ {(parseFloat(formData.totalWeightKg) * parseFloat(formData.costPerKg)).toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Total investment for this cycle
-                </p>
+                <h4 className="font-semibold mb-1">Cost Summary</h4>
+                <p className="text-2xl font-bold text-primary">GH₵ {totalCost.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Total investment for this cycle</p>
               </div>
             )}
 
             <div className="flex gap-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/cycles')}
-                className="flex-1 h-14 text-lg"
-              >
+              <Button type="button" variant="outline" onClick={() => navigate('/cycles')} className="flex-1 h-14 text-lg">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={!isValid || isSubmitting}
-                className="flex-1 h-14 text-lg"
-              >
+              <Button type="submit" disabled={!isValid || isSubmitting} className="flex-1 h-14 text-lg">
                 {isSubmitting ? 'Creating...' : 'Create Cycle'}
               </Button>
             </div>

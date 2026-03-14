@@ -27,7 +27,7 @@ export const AuthContextProvider = ({ children }) => {
       },
     );
 
-    const exp = Date.now() + 30 * 60 * 1000;
+    const exp = Date.now() + 300 * 60 * 1000;
     const userData = { ...res.data, exp };
 
     setCurrentUser(userData); // <-- this is what unlocks the protected routes

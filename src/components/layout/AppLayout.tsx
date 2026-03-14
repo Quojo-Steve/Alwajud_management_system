@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   Menu,
+  Truck,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -26,6 +27,7 @@ const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/cycles", label: "Production Cycles", icon: RefreshCcw },
   { path: "/clients", label: "Clients", icon: Users },
+  { path: "/suppliers", label: "Suppliers", icon: Truck },
   { path: "/orders", label: "Orders", icon: ShoppingCart },
   { path: "/receipts", label: "Receipts", icon: Receipt },
   { path: "/analytics", label: "Analytics", icon: BarChart3 },

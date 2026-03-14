@@ -1,58 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
-import { 
-  Plus, 
-  Search, 
-  ShoppingCart,
-  Calendar,
-  ArrowRight,
-  Filter
+import { axiosService } from '@/utils/axiosServices';
+import {
+  Plus, Search, ShoppingCart, Calendar, ArrowRight, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { toast } from '@/hooks/use-toast';
 
 export default function OrdersList() {
   const navigate = useNavigate();
-  const { orders, clients, cycles, getClientById, getCycleById, getReceiptByOrderId } = useData();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [clientFilter, setClientFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [clientFilter, setClientFilter] = useState('all');
 
-  const filteredOrders = orders
+  useEffect(() => {
+    Promise.all([
+      axiosService('get', '/orders'),
+      axiosService('get', '/clients'),
+    ])
+      .then(([ordersData, clientsData]) => {
+        setOrders(ordersData);
+        setClients(clientsData);
+      })
+      .catch(() => toast({ title: "Error", description: "Failed to load orders.", variant: "destructive" }))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = orders
     .filter(order => {
-      const client = getClientById(order.clientId);
-      const matchesSearch = client?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(order.id).includes(searchTerm);
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-      const matchesClient = clientFilter === 'all' || order.clientId === clientFilter;
+      const matchesClient = clientFilter === 'all' || String(order.client_id) === clientFilter;
       return matchesSearch && matchesStatus && matchesClient;
     })
-    .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+    .sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime());
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            Orders
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage all customer orders
-          </p>
+          <h1 className="text-3xl font-display font-bold text-foreground">Orders</h1>
+          <p className="text-muted-foreground mt-1">Manage all customer orders</p>
         </div>
         <Button size="lg" onClick={() => navigate('/orders/new')} className="h-14">
-          <Plus className="w-5 h-5 mr-2" />
-          New Order
+          <Plus className="w-5 h-5 mr-2" /> New Order
         </Button>
       </div>
 
@@ -74,9 +82,9 @@ export default function OrdersList() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={setClientFilter}>
@@ -85,18 +93,16 @@ export default function OrdersList() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Clients</SelectItem>
-              {clients.map(client => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
+              {clients.map(c => (
+                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Orders Table */}
-      {filteredOrders.length > 0 ? (
+      {/* Table */}
+      {filtered.length > 0 ? (
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -115,60 +121,47 @@ export default function OrdersList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map((order) => {
-                    const client = getClientById(order.clientId);
-                    const cycle = getCycleById(order.cycleId);
-                    const receipt = getReceiptByOrderId(order.id);
-                    const total = order.totalWeightKg * order.pricePerKg;
-
-                    return (
-                      <tr key={order.id}>
-                        <td>
-                          <Link 
-                            to={`/clients/${order.clientId}`}
-                            className="font-semibold text-primary hover:underline"
-                          >
-                            {client?.name || 'Unknown'}
-                          </Link>
-                        </td>
-                        <td>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {new Date(order.orderDate).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td>{cycle?.supplierName || order.cycleId.slice(0, 6)}</td>
-                        <td>{order.totalWeightKg} kg</td>
-                        <td>{order.rolls.length}</td>
-                        <td className="font-semibold">GH₵ {total.toLocaleString()}</td>
-                        <td>
-                          <span className={
-                            order.status === 'completed' ? 'status-open' :
-                            order.status === 'pending' ? 'status-pending' :
-                            'status-closed'
-                          }>
-                            {order.status.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td>
-                          {receipt ? (
-                            <span className="text-success text-sm font-medium">
-                              {receipt.receiptNumber}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </td>
-                        <td>
-                          <Link to={`/orders/${order.id}`}>
-                            <Button size="sm" variant="ghost">
-                              View <ArrowRight className="w-4 h-4 ml-1" />
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filtered.map((order) => (
+                    <tr key={order.id}>
+                      <td>
+                        <Link to={`/clients/${order.client_id}`} className="font-semibold text-primary hover:underline">
+                          {order.client_name}
+                        </Link>
+                      </td>
+                      <td>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {new Date(order.order_date).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td className="text-sm text-muted-foreground">#{order.cycle_id}</td>
+                      <td>{order.total_weight_kg} kg</td>
+                      <td>{order.num_rolls}</td>
+                      <td className="font-semibold">
+                        GH₵ {(Number(order.total_weight_kg) * Number(order.price_per_kg)).toLocaleString()}
+                      </td>
+                      <td>
+                        <span className={
+                          order.status === 'Completed' ? 'status-open' :
+                          order.status === 'Pending' ? 'status-pending' : 'status-closed'
+                        }>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td>
+                        {order.receipt_number
+                          ? <span className="text-success text-sm font-medium">{order.receipt_number}</span>
+                          : <span className="text-muted-foreground text-sm">—</span>}
+                      </td>
+                      <td>
+                        <Link to={`/orders/${order.id}`}>
+                          <Button size="sm" variant="ghost">
+                            View <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -182,12 +175,10 @@ export default function OrdersList() {
             <p className="text-muted-foreground mb-6">
               {searchTerm || statusFilter !== 'all' || clientFilter !== 'all'
                 ? 'Try adjusting your filters'
-                : 'Create your first order to get started'
-              }
+                : 'Create your first order to get started'}
             </p>
             <Button onClick={() => navigate('/orders/new')}>
-              <Plus className="w-5 h-5 mr-2" />
-              Create First Order
+              <Plus className="w-5 h-5 mr-2" /> Create First Order
             </Button>
           </CardContent>
         </Card>

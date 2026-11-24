@@ -93,7 +93,7 @@ export default function ClientsList() {
                 <div className="flex items-start gap-4">
                   <Avatar className="w-16 h-16">
                     {client.logo
-                      ? <AvatarImage src={`${Url}/uploads/logos/${client.logo}`} />
+                      ? <AvatarImage src={client.logo} alt={client.name} />
                       : null}
                     <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
                       {getInitials(client.name)}
